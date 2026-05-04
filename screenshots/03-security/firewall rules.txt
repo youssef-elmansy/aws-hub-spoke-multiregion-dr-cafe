@@ -1,0 +1,147 @@
+# ============================================================
+# GBG Cafe — AWS Network Firewall Stateful Rules
+# Shared Policy: applies to both us-east-1 and eu-central-1
+# Last updated: 2026-05-03
+# Owner: GBG Cafe Infrastructure
+#
+# ARCHITECTURE SUMMARY:
+#   Region A (Virginia)  — 10.0.0.0/16 hub, 10.1.0.0/16 spoke
+#   Region B (Frankfurt) — 20.0.0.0/16 hub, 100.64.0.0/16 spoke
+#
+# TRAFFIC FLOW:
+#   Internet → ALB (443/80) → NLB (5002) → EC2 (5002) → RDS (3306)
+#   Frankfurt EC2 writes to Virginia RDS cross-region (3306)
+#   All EC2s call AWS APIs via HTTPS (443) — Secrets Manager, S3 MRAP
+#   Bastion in hub SSHes into spokes (22)
+#
+# RULE ORDER:
+#   Rules are evaluated top to bottom
+#   First match wins
+#   Anything not matched is DROPPED by default action
+#
+# STATEFUL ENGINE:
+#   Return traffic is automatically allowed
+#   You do NOT need rules for response packets
+#   Only model the initiating direction
+# ============================================================
+
+
+# ============================================================
+# SECTION 1 — HTTP/HTTPS
+# Covers:
+#   - Internet users hitting the ALB
+#   - EC2 instances calling AWS APIs (Secrets Manager, S3, MRAP)
+#   - Software updates, package installs
+# ============================================================
+
+# Allow all HTTP inbound and outbound
+# Needed for: ALB listener, apt/yum updates, HTTP redirects
+pass tcp any any -> any 80 (msg:"ALLOW HTTP"; sid:1001; rev:1;)
+
+# Allow all HTTPS inbound and outbound
+# Needed for: ALB HTTPS listener, Secrets Manager API, S3 MRAP, CloudFront
+pass tcp any any -> any 443 (msg:"ALLOW HTTPS"; sid:1002; rev:1;)
+
+
+# ============================================================
+# SECTION 2 — APPLICATION PORT 5002
+# Covers:
+#   - ALB in hub → NLB in spoke (cross-VPC via TGW)
+#   - NLB in spoke → EC2 instances
+#   - Health checks from ALB and NLB target groups
+# ============================================================
+
+# Allow app traffic from Virginia hub to Virginia spoke
+# ALB (10.0.0.0/16) → NLB → EC2 (10.1.0.0/16)
+pass tcp 10.0.0.0/16 any -> 10.1.0.0/16 5002 (msg:"ALLOW Virginia Hub to Spoke App Port"; sid:2001; rev:1;)
+
+# Allow app traffic from Frankfurt hub to Frankfurt spoke
+# ALB (20.0.0.0/16) → NLB → EC2 (100.64.0.0/16)
+pass tcp 20.0.0.0/16 any -> 100.64.0.0/16 5002 (msg:"ALLOW Frankfurt Hub to Spoke App Port"; sid:2002; rev:1;)
+
+# Allow health check responses from EC2 back to NLB and ALB
+# NLB health checks originate from spoke CIDR
+pass tcp 10.1.0.0/16 any -> 10.0.0.0/16 5002 (msg:"ALLOW Virginia Spoke to Hub Health Check"; sid:2003; rev:1;)
+pass tcp 100.64.0.0/16 any -> 20.0.0.0/16 5002 (msg:"ALLOW Frankfurt Spoke to Hub Health Check"; sid:2004; rev:1;)
+
+
+# ============================================================
+# SECTION 3 — DATABASE (MySQL/Aurora 3306)
+# Covers:
+#   - Virginia EC2 → Virginia RDS (same region write)
+#   - Frankfurt EC2 → Virginia RDS (cross-region write via TGW peering)
+#
+# NOTE: Reader endpoint (dbreader.gbgcafe.click) also uses 3306
+#       Both writer and reader are covered by these rules
+# ============================================================
+
+# Allow Virginia EC2 → Virginia RDS
+# Spoke EC2s (10.1.0.0/16) writing to RDS also in 10.1.0.0/16
+pass tcp 10.1.0.0/16 any -> 10.1.0.0/16 3306 (msg:"ALLOW Virginia EC2 to Virginia RDS"; sid:3001; rev:1;)
+
+# Allow Frankfurt EC2 → Virginia RDS cross-region
+# Frankfurt spoke (100.64.0.0/16) → Virginia spoke RDS (10.1.0.0/16)
+# Traffic path: Frankfurt EC2 → Frankfurt TGW → Peering → Virginia TGW → Firewall → RDS
+pass tcp 100.64.0.0/16 any -> 10.1.0.0/16 3306 (msg:"ALLOW Frankfurt EC2 to Virginia RDS cross-region"; sid:3002; rev:1;)
+
+
+# ============================================================
+# SECTION 4 — SSH (BASTION ACCESS)
+# Covers:
+#   - Bastion host in Virginia hub → Virginia spoke EC2s
+#   - Bastion host in Virginia hub → Frankfurt spoke EC2s
+#
+# NOTE: Bastion is in 10.0.0.0/16 (Virginia hub)
+#       Only hub CIDR can initiate SSH — not internet directly
+# ============================================================
+
+# Allow bastion → Virginia spoke EC2s
+pass tcp 10.0.0.0/16 any -> 10.1.0.0/16 22 (msg:"ALLOW Bastion SSH to Virginia Spoke"; sid:4001; rev:1;)
+
+# Allow bastion → Frankfurt spoke EC2s
+pass tcp 10.0.0.0/16 any -> 100.64.0.0/16 22 (msg:"ALLOW Bastion SSH to Frankfurt Spoke"; sid:4002; rev:1;)
+
+
+# ============================================================
+# SECTION 5 — ICMP (OPTIONAL BUT RECOMMENDED)
+# Covers:
+#   - ping for diagnostics between VPCs
+#   - traceroute path analysis
+#
+# Remove this section if you want to block ICMP entirely
+# ============================================================
+
+# Allow ICMP between all private CIDRs
+pass icmp 10.0.0.0/8 any -> 10.0.0.0/8 any (msg:"ALLOW ICMP private ranges"; sid:5001; rev:1;)
+pass icmp 100.64.0.0/16 any -> 10.0.0.0/8 any (msg:"ALLOW ICMP Frankfurt to Virginia"; sid:5002; rev:1;)
+pass icmp 10.0.0.0/8 any -> 100.64.0.0/16 any (msg:"ALLOW ICMP Virginia to Frankfurt"; sid:5003; rev:1;)
+
+
+# ============================================================
+# SECTION 6 — DNS
+# Covers:
+#   - EC2 instances resolving DNS (Route 53 Resolver)
+#   - RDS endpoint resolution
+#   - AWS service endpoint resolution
+#
+# NOTE: DNS uses UDP 53, not TCP
+#       Route 53 Resolver runs at 169.254.169.253 inside VPC
+# ============================================================
+
+# Allow DNS outbound from all private ranges
+# Allow DNS to VPC resolver (Route 53)
+pass udp any any -> 169.254.169.253 53 (msg:"ALLOW DNS to VPC Resolver"; sid:6001; rev:1;)
+
+# Allow DNS to any (catches all other resolvers)
+pass udp any any -> any 53 (msg:"ALLOW DNS UDP"; sid:6002; rev:1;)
+
+
+# ============================================================
+# DEFAULT — DROP EVERYTHING ELSE
+# This is set as the default action in the firewall policy
+# not as a Suricata rule — set it in the AWS console under:
+#   Firewall Policy → Stateful default actions → DROP
+#
+# Anything not matching rules 1001-6002 above is silently dropped
+# Check firewall logs in S3 (firewall-alert/ prefix) to see drops
+# ============================================================

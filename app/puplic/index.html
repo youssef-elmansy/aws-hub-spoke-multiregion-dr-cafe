@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>☕ The Brew</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Playfair Display', 'serif'],
+            sans:  ['Inter', 'sans-serif'],
+          },
+          colors: {
+            espresso: '#2C1A0E',
+            cream:    '#FAF6F1',
+            latte:    '#C4A882',
+            foam:     '#F5ECD7',
+            roast:    '#6B3F1F',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background-color: #FAF6F1; color: #2C1A0E; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease forwards; }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .toast { animation: toastIn 0.3s ease forwards; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #FAF6F1; }
+    ::-webkit-scrollbar-thumb { background: #C4A882; border-radius: 10px; }
+
+    .cat-pill.active { background-color: #2C1A0E; color: #FAF6F1; }
+    .nav-link.active { color: #C4A882; border-bottom: 2px solid #C4A882; }
+    .page { display: none; }
+    .page.active { display: block; }
+  </style>
+</head>
+
+<body class="min-h-screen">
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--                  NAVBAR                    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav class="sticky top-0 z-50 bg-espresso text-cream shadow-lg">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+
+      <div class="cursor-pointer" onclick="navigateTo('menu')">
+        <h1 class="font-serif text-2xl font-bold tracking-wide">The Brew</h1>
+        <p class="text-xs text-latte tracking-widest uppercase">Specialty Coffee</p>
+      </div>
+
+      <div class="flex gap-6 text-sm font-medium">
+        <button id="nav-menu" onclick="navigateTo('menu')" class="nav-link active pb-1 hover:text-latte transition-colors">Menu</button>
+        <button id="nav-blog" onclick="navigateTo('blog')" class="nav-link pb-1 hover:text-latte transition-colors">Blog</button>
+        <a href="/staff" class="pb-1 text-latte/60 hover:text-latte transition-colors text-xs flex items-center gap-1">🔒 Staff</a>
+      </div>
+
+      <button
+        onclick="toggleCart()"
+        class="relative flex items-center gap-2 bg-latte text-espresso px-4 py-2 rounded-full text-sm font-semibold hover:bg-foam transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 6h13M7 13L5.4 5M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z"/>
+        </svg>
+        Cart
+        <span id="cart-badge" class="hidden absolute -top-2 -right-2 bg-roast text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--               MENU PAGE                    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-menu" class="page active">
+
+    <section class="bg-espresso text-cream py-20 px-6 text-center">
+      <p class="text-latte tracking-[0.3em] text-xs uppercase mb-4">Est. 2024 · Specialty Coffee</p>
+      <h2 class="font-serif text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        Every Cup,<br/>A Moment.
+      </h2>
+      <p class="text-foam/70 text-lg max-w-md mx-auto mb-10">
+        Freshly brewed, carefully crafted. Order your favourite below.
+      </p>
+      <a href="#menu-section" class="inline-block bg-latte text-espresso px-8 py-3 rounded-full font-semibold text-sm hover:bg-foam transition-colors">
+        View Menu
+      </a>
+    </section>
+
+    <section id="menu-section" class="max-w-6xl mx-auto px-6 py-16">
+      <div class="text-center mb-10">
+        <p class="text-latte tracking-widest text-xs uppercase mb-2">What we serve</p>
+        <h3 class="font-serif text-4xl font-bold text-espresso">Our Menu</h3>
+      </div>
+
+      <div id="category-pills" class="flex flex-wrap gap-3 justify-center mb-10"></div>
+
+      <div id="menu-loading" class="text-center py-20 text-latte">
+        <div class="inline-block w-8 h-8 border-4 border-latte border-t-espresso rounded-full animate-spin mb-4"></div>
+        <p class="text-sm">Brewing your menu...</p>
+      </div>
+
+      <div id="menu-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+      <div id="menu-error" class="hidden text-center py-20 text-roast">
+        <p class="text-lg font-medium">Couldn't load the menu. Please try again.</p>
+        <button onclick="loadMenu()" class="mt-4 px-6 py-2 bg-espresso text-cream rounded-full text-sm hover:bg-roast transition-colors">Retry</button>
+      </div>
+    </section>
+
+    <section class="bg-espresso text-cream py-16 px-6">
+      <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-10 text-center">
+        <div>
+          <p class="text-4xl mb-3">☕</p>
+          <h4 class="font-serif text-xl mb-2">Specialty Beans</h4>
+          <p class="text-foam/60 text-sm">Single-origin, ethically sourced, roasted locally every week.</p>
+        </div>
+        <div>
+          <p class="text-4xl mb-3">🥐</p>
+          <h4 class="font-serif text-xl mb-2">Fresh Daily</h4>
+          <p class="text-foam/60 text-sm">All food made fresh each morning. No preservatives, ever.</p>
+        </div>
+        <div>
+          <p class="text-4xl mb-3">🌿</p>
+          <h4 class="font-serif text-xl mb-2">Sustainably Run</h4>
+          <p class="text-foam/60 text-sm">Compostable cups, zero food waste, carbon-offset delivery.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--               BLOG PAGE                    -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="page-blog" class="page">
+
+    <section class="bg-espresso text-cream py-16 px-6 text-center">
+      <p class="text-latte tracking-[0.3em] text-xs uppercase mb-4">Stories & Updates</p>
+      <h2 class="font-serif text-5xl font-bold mb-4">The Brew Journal</h2>
+      <p class="text-foam/70 text-lg max-w-md mx-auto">
+        Behind the beans — our stories, recipes and cafe updates.
+      </p>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 py-16">
+      <div class="flex justify-between items-center mb-10">
+        <div>
+          <p class="text-latte tracking-widest text-xs uppercase mb-1">Latest Posts</p>
+          <h3 class="font-serif text-3xl font-bold text-espresso">All Stories</h3>
+        </div>
+      </div>
+
+      <div id="blog-loading" class="text-center py-20 text-latte">
+        <div class="inline-block w-8 h-8 border-4 border-latte border-t-espresso rounded-full animate-spin mb-4"></div>
+        <p class="text-sm">Loading posts...</p>
+      </div>
+
+      <div id="blog-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+
+      <div id="blog-empty" class="hidden text-center py-20">
+        <p class="text-5xl mb-4">📝</p>
+        <p class="text-latte text-lg">No posts yet. Check back soon!</p>
+      </div>
+
+      <div id="blog-error" class="hidden text-center py-20 text-roast">
+        <p class="text-lg font-medium">Couldn't load posts. Please try again.</p>
+        <button onclick="loadBlog()" class="mt-4 px-6 py-2 bg-espresso text-cream rounded-full text-sm hover:bg-roast transition-colors">Retry</button>
+      </div>
+    </section>
+
+    <!-- Single Post Modal -->
+    <div id="post-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center px-4 py-10 overflow-y-auto">
+      <div class="bg-cream rounded-3xl max-w-2xl w-full shadow-2xl fade-up">
+        <div id="post-modal-img-wrap" class="hidden">
+          <img id="post-modal-img" src="" alt="" class="w-full h-64 object-cover rounded-t-3xl"/>
+        </div>
+        <div class="p-8">
+          <div class="flex justify-between items-start mb-4">
+            <p id="post-modal-date" class="text-xs text-latte uppercase tracking-widest"></p>
+            <button onclick="closePostModal()" class="text-latte hover:text-espresso text-2xl leading-none">&times;</button>
+          </div>
+          <h3 id="post-modal-title" class="font-serif text-3xl font-bold text-espresso mb-4"></h3>
+          <p id="post-modal-content" class="text-espresso/80 text-sm leading-relaxed whitespace-pre-wrap"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              CART SIDEBAR                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="cart-overlay" class="hidden fixed inset-0 bg-black/40 z-40" onclick="toggleCart()"></div>
+
+  <div id="cart-sidebar" class="hidden fixed top-0 right-0 h-full w-full sm:w-96 bg-cream z-50 shadow-2xl flex flex-col slide-in">
+    <div class="bg-espresso text-cream px-6 py-5 flex items-center justify-between">
+      <h3 class="font-serif text-xl">Your Order</h3>
+      <button onclick="toggleCart()" class="text-foam/70 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="px-6 pt-5 pb-2">
+      <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Your Name</label>
+      <input
+        id="customer-name"
+        type="text"
+        placeholder="e.g. John Smith"
+        class="w-full border border-latte/40 bg-foam rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-latte text-espresso placeholder-latte/50"
+      />
+    </div>
+    <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-4 space-y-3"></div>
+    <div id="cart-empty" class="flex-1 flex items-center justify-center flex-col text-latte gap-3">
+      <p class="text-4xl">☕</p>
+      <p class="text-sm">Your cart is empty</p>
+    </div>
+    <div class="border-t border-latte/20 px-6 py-5 bg-foam">
+      <div class="flex justify-between items-center mb-5">
+        <span class="text-sm font-semibold uppercase tracking-wide text-espresso">Total</span>
+        <span id="cart-total" class="text-2xl font-serif font-bold text-espresso">£0.00</span>
+      </div>
+      <button
+        id="place-order-btn"
+        onclick="placeOrder()"
+        class="w-full bg-espresso text-cream py-4 rounded-2xl font-semibold text-sm hover:bg-roast transition-colors"
+      >Place Order</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--         ORDER CONFIRMATION MODAL           -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="confirm-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+    <div class="bg-cream rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl fade-up">
+      <div class="text-6xl mb-4">✅</div>
+      <h3 class="font-serif text-2xl font-bold text-espresso mb-2">Order Placed!</h3>
+      <p id="confirm-name"  class="text-sm text-roast mb-1"></p>
+      <p id="confirm-total" class="text-3xl font-serif font-bold text-espresso my-4"></p>
+      <p id="confirm-id"    class="text-xs text-latte mb-1"></p>
+      <p id="confirm-az"    class="text-xs text-latte mb-6"></p>
+      <button onclick="closeConfirm()" class="w-full bg-espresso text-cream py-3 rounded-2xl font-semibold text-sm hover:bg-roast transition-colors">
+        Done ☕
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--                 FOOTER                     -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="bg-espresso/90 text-foam/50 text-center text-xs py-6 px-4">
+    <p>© 2024 The Brew · All rights reserved · <span class="text-latte/60">Served with ❤️</span></p>
+    <p class="mt-2 flex items-center justify-center gap-2 flex-wrap">
+      <span id="region-dot" class="inline-block w-2 h-2 rounded-full bg-latte/40 animate-pulse"></span>
+      <span class="text-latte/70">
+        Routed via Route 53 →
+        <span id="footer-region" class="font-semibold text-latte">detecting...</span>
+        <span id="footer-az"     class="text-foam/40"></span>
+        <span id="footer-ip"     class="text-latte/50 font-mono"></span>
+      </span>
+    </p>
+  </footer>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-espresso text-cream text-sm px-6 py-3 rounded-full shadow-xl z-50"></div>
+
+  <script>
+
+    let menuItems      = [];
+    let cart           = [];
+    let activeCategory = 'All';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMenu();
+      loadRegionInfo();
+    });
+
+    // ─── Region Indicator ─────────────────────────
+    async function loadRegionInfo() {
+      try {
+        const res  = await fetch('/api/region');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+
+        const { region, az, privateIp } = json.data;
+
+        const regionNames = {
+          'us-east-1':      '🇺🇸 N. Virginia',
+          'us-east-2':      '🇺🇸 Ohio',
+          'us-west-1':      '🇺🇸 N. California',
+          'us-west-2':      '🇺🇸 Oregon',
+          'eu-west-1':      '🇮🇪 Ireland',
+          'eu-west-2':      '🇬🇧 London',
+          'eu-west-3':      '🇫🇷 Paris',
+          'eu-central-1':   '🇩🇪 Frankfurt',
+          'eu-north-1':     '🇸🇪 Stockholm',
+          'ap-south-1':     '🇮🇳 Mumbai',
+          'ap-southeast-1': '🇸🇬 Singapore',
+          'ap-southeast-2': '🇦🇺 Sydney',
+          'ap-northeast-1': '🇯🇵 Tokyo',
+          'ap-northeast-2': '🇰🇷 Seoul',
+          'ca-central-1':   '🇨🇦 Canada',
+          'sa-east-1':      '🇧🇷 São Paulo',
+        };
+
+        const friendly = regionNames[region] || region;
+        document.getElementById('footer-region').textContent = `${friendly} (${region})`;
+        document.getElementById('footer-az').textContent     = `· ${az}`;
+        document.getElementById('footer-ip').textContent     = `· ${privateIp}`;
+
+        const dot = document.getElementById('region-dot');
+        dot.classList.remove('bg-latte/40', 'animate-pulse');
+        dot.classList.add('bg-green-400');
+      } catch {
+        document.getElementById('footer-region').textContent = 'unknown';
+      }
+    }
+
+    // ─── Navigation ───────────────────────────────
+    function navigateTo(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.getElementById(`nav-${page}`).classList.add('active');
+      if (page === 'menu') loadMenu();
+      if (page === 'blog') loadBlog();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ─── Menu ─────────────────────────────────────
+    async function loadMenu() {
+      showEl('menu-loading');
+      hideEl('menu-grid');
+      hideEl('menu-error');
+      try {
+        const res  = await fetch('/api/menu');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        menuItems = json.data;
+        buildCategoryPills();
+        renderMenu('All');
+        hideEl('menu-loading');
+        showEl('menu-grid');
+      } catch {
+        hideEl('menu-loading');
+        showEl('menu-error');
+      }
+    }
+
+    function buildCategoryPills() {
+      const cats    = ['All', ...new Set(menuItems.map(i => i.category))];
+      const pillBox = document.getElementById('category-pills');
+      pillBox.innerHTML = '';
+      cats.forEach(cat => {
+        const btn     = document.createElement('button');
+        btn.textContent = cat;
+        btn.dataset.cat = cat;
+        btn.className   = `cat-pill ${cat === 'All' ? 'active' : ''} px-5 py-2 rounded-full border border-espresso text-sm font-medium transition-all hover:bg-espresso hover:text-cream`;
+        btn.onclick     = () => filterCategory(cat);
+        pillBox.appendChild(btn);
+      });
+    }
+
+    function filterCategory(cat) {
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(p => {
+        p.classList.toggle('active', p.dataset.cat === cat);
+      });
+      renderMenu(cat);
+    }
+
+    function renderMenu(cat) {
+      const grid     = document.getElementById('menu-grid');
+      const filtered = cat === 'All' ? menuItems : menuItems.filter(i => i.category === cat);
+      grid.innerHTML = '';
+
+      filtered.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'fade-up bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-latte/10';
+        card.style.animationDelay = `${idx * 60}ms`;
+
+        const imgHTML = item.image_url
+          ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-44 object-cover"/>`
+          : `<div class="w-full h-44 bg-foam flex items-center justify-center text-5xl">${categoryEmoji(item.category)}</div>`;
+
+        card.innerHTML = `
+          ${imgHTML}
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-1">
+              <h4 class="font-serif text-lg font-semibold text-espresso">${item.name}</h4>
+              <span class="text-roast font-bold text-sm ml-2 whitespace-nowrap">£${parseFloat(item.price).toFixed(2)}</span>
+            </div>
+            <p class="text-xs text-latte mb-4 leading-relaxed">${item.description}</p>
+            <button
+              onclick="addToCart(${item.id})"
+              class="w-full bg-espresso text-cream py-2.5 rounded-xl text-sm font-medium hover:bg-roast transition-colors"
+            >Add to Order</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function categoryEmoji(cat) {
+      const map = { 'Hot Drinks': '☕', 'Cold Drinks': '🧊', 'Food': '🥐' };
+      return map[cat] || '🍽️';
+    }
+
+    // ─── Blog ─────────────────────────────────────
+    async function loadBlog() {
+      showEl('blog-loading');
+      hideEl('blog-grid');
+      hideEl('blog-empty');
+      hideEl('blog-error');
+      try {
+        const res  = await fetch('/api/blog');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        hideEl('blog-loading');
+        if (!json.data.length) { showEl('blog-empty'); return; }
+        renderBlog(json.data);
+        showEl('blog-grid');
+      } catch {
+        hideEl('blog-loading');
+        showEl('blog-error');
+      }
+    }
+
+    function renderBlog(posts) {
+      const grid = document.getElementById('blog-grid');
+      grid.innerHTML = '';
+      posts.forEach((post, idx) => {
+        const card = document.createElement('div');
+        card.className = 'fade-up bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-latte/10 flex flex-col';
+        card.style.animationDelay = `${idx * 60}ms`;
+
+        const imgHTML = post.image_url
+          ? `<img src="${post.image_url}" alt="${post.title}" class="w-full h-48 object-cover cursor-pointer" onclick="openPost(${post.id})"/>`
+          : `<div class="w-full h-48 bg-foam flex items-center justify-center text-5xl cursor-pointer" onclick="openPost(${post.id})">📝</div>`;
+
+        const date    = new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        const preview = post.content.length > 120 ? post.content.substring(0, 120) + '...' : post.content;
+
+        card.innerHTML = `
+          ${imgHTML}
+          <div class="p-6 flex flex-col flex-1">
+            <p class="text-xs text-latte uppercase tracking-widest mb-2">${date}</p>
+            <h4 class="font-serif text-xl font-bold text-espresso mb-2 cursor-pointer hover:text-roast transition-colors" onclick="openPost(${post.id})">${post.title}</h4>
+            <p class="text-xs text-espresso/60 leading-relaxed flex-1">${preview}</p>
+            <div class="flex gap-2 mt-4">
+              <button
+                onclick="openPost(${post.id})"
+                class="flex-1 border border-espresso text-espresso py-2 rounded-xl text-xs font-medium hover:bg-espresso hover:text-cream transition-colors"
+              >Read More</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function openPost(postId) {
+      try {
+        const res  = await fetch(`/api/blog/${postId}`);
+        const json = await res.json();
+        if (!json.success) return;
+        const post = json.data;
+        const date = new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        document.getElementById('post-modal-title').textContent   = post.title;
+        document.getElementById('post-modal-content').textContent = post.content;
+        document.getElementById('post-modal-date').textContent    = date;
+        const imgWrap = document.getElementById('post-modal-img-wrap');
+        if (post.image_url) {
+          document.getElementById('post-modal-img').src = post.image_url;
+          imgWrap.classList.remove('hidden');
+        } else {
+          imgWrap.classList.add('hidden');
+        }
+        showEl('post-modal');
+      } catch {
+        showToast('Could not load post.');
+      }
+    }
+
+    function closePostModal() { hideEl('post-modal'); }
+
+    // ─── Cart ─────────────────────────────────────
+    function addToCart(itemId) {
+      const item   = menuItems.find(i => i.id === itemId);
+      const inCart = cart.find(c => c.item.id === itemId);
+      if (inCart) inCart.qty++;
+      else cart.push({ item, qty: 1 });
+      updateCartUI();
+      showToast(`${item.name} added ☕`);
+    }
+
+    function removeFromCart(itemId) {
+      cart = cart.filter(c => c.item.id !== itemId);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalQty = cart.reduce((s, c) => s + c.qty, 0);
+      const badge    = document.getElementById('cart-badge');
+      if (totalQty > 0) {
+        badge.textContent = totalQty;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      } else {
+        badge.classList.add('hidden');
+      }
+      renderCartItems();
+    }
+
+    function renderCartItems() {
+      const container = document.getElementById('cart-items');
+      const emptyMsg  = document.getElementById('cart-empty');
+      const total     = cart.reduce((s, c) => s + c.item.price * c.qty, 0);
+      document.getElementById('cart-total').textContent = `£${total.toFixed(2)}`;
+      if (!cart.length) {
+        container.classList.add('hidden');
+        emptyMsg.classList.remove('hidden');
+        return;
+      }
+      emptyMsg.classList.add('hidden');
+      container.classList.remove('hidden');
+      container.innerHTML = '';
+      cart.forEach(({ item, qty }) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between bg-foam rounded-xl px-4 py-3';
+        row.innerHTML = `
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-espresso">${item.name}</p>
+            <p class="text-xs text-latte">£${parseFloat(item.price).toFixed(2)} × ${qty}</p>
+          </div>
+          <div class="flex items-center gap-2 ml-3">
+            <span class="text-sm font-bold text-espresso">£${(item.price * qty).toFixed(2)}</span>
+            <button onclick="removeFromCart(${item.id})" class="text-latte hover:text-roast text-lg leading-none ml-1">&times;</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function toggleCart() {
+      const sidebar = document.getElementById('cart-sidebar');
+      const overlay = document.getElementById('cart-overlay');
+      if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('flex');
+        overlay.classList.remove('hidden');
+        renderCartItems();
+      } else {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('flex');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    async function placeOrder() {
+      const name = document.getElementById('customer-name').value.trim();
+      if (!name)        { showToast('Please enter your name 😊'); return; }
+      if (!cart.length) { showToast('Your cart is empty!'); return; }
+      const btn = document.getElementById('place-order-btn');
+      btn.disabled    = true;
+      btn.textContent = 'Placing order...';
+      try {
+        const res = await fetch('/api/orders', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            customer_name: name,
+            items: cart.flatMap(c =>
+              Array(c.qty).fill({
+                menu_item_id:  c.item.id,
+                price_at_time: parseFloat(c.item.price),
+              })
+            ),
+          }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        toggleCart();
+        showConfirmation(json.data);
+        cart = [];
+        updateCartUI();
+        document.getElementById('customer-name').value = '';
+      } catch {
+        showToast('Order failed. Please try again.');
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Place Order';
+      }
+    }
+
+    function showConfirmation(data) {
+      document.getElementById('confirm-name').textContent  = `Hey ${data.customer}, your order is in!`;
+      document.getElementById('confirm-total').textContent = data.total;
+      document.getElementById('confirm-id').textContent    = `Order #${data.order_id}`;
+      document.getElementById('confirm-az').textContent    = `Served by: ${data.served_by} · ${data.az}`;
+      showEl('confirm-modal');
+    }
+
+    function closeConfirm() { hideEl('confirm-modal'); }
+
+    // ─── Toast ────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+
+    function showEl(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hideEl(id) { document.getElementById(id).classList.add('hidden'); }
+
+  </script>
+</body>
+</html>

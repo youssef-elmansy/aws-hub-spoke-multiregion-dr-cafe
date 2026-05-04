@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>☕ The Brew — Staff</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Playfair Display', 'serif'],
+            sans:  ['Inter', 'sans-serif'],
+          },
+          colors: {
+            espresso: '#2C1A0E',
+            cream:    '#FAF6F1',
+            latte:    '#C4A882',
+            foam:     '#F5ECD7',
+            roast:    '#6B3F1F',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { background-color: #FAF6F1; color: #2C1A0E; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .toast { animation: toastIn 0.3s ease forwards; }
+    .tab-btn.active { background-color: #2C1A0E; color: #FAF6F1; }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col">
+
+  <!-- ═══════════════════════════════════ -->
+  <!--           LOGIN SCREEN             -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center px-4 bg-espresso flex-1">
+    <div class="bg-cream rounded-3xl p-10 max-w-sm w-full shadow-2xl fade-up">
+      <div class="text-center mb-8">
+        <p class="text-5xl mb-3">☕</p>
+        <h1 class="font-serif text-3xl font-bold text-espresso">Staff Portal</h1>
+        <p class="text-latte text-sm mt-1">The Brew · Orders Dashboard</p>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Username</label>
+          <input
+            id="login-user"
+            type="text"
+            placeholder="Enter username"
+            class="w-full border border-latte/40 bg-foam rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-latte text-espresso placeholder-latte/50"
+            onkeydown="if(event.key==='Enter') doLogin()"
+          />
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Password</label>
+          <input
+            id="login-pass"
+            type="password"
+            placeholder="Enter password"
+            class="w-full border border-latte/40 bg-foam rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-latte text-espresso placeholder-latte/50"
+            onkeydown="if(event.key==='Enter') doLogin()"
+          />
+        </div>
+        <p id="login-error" class="hidden text-red-400 text-xs text-center">❌ Incorrect username or password</p>
+        <button
+          onclick="doLogin()"
+          class="w-full bg-espresso text-cream py-3 rounded-2xl font-semibold text-sm hover:bg-roast transition-colors mt-2"
+        >Sign In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--          STAFF DASHBOARD           -->
+  <!-- ═══════════════════════════════════ -->
+  <div id="dashboard" class="hidden flex-1 flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-espresso text-cream shadow-lg">
+      <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div>
+          <h1 class="font-serif text-2xl font-bold">The Brew</h1>
+          <p class="text-xs text-latte tracking-widest uppercase">Staff Dashboard</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <p id="live-clock" class="text-latte text-sm hidden md:block"></p>
+          <a href="/" class="text-latte/60 hover:text-latte text-xs transition-colors">← Back to Site</a>
+          <button onclick="doLogout()" class="text-latte hover:text-cream text-sm transition-colors">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Tabs -->
+    <div class="bg-foam border-b border-latte/20">
+      <div class="max-w-6xl mx-auto px-6 flex gap-2 py-3">
+        <button
+          id="tab-orders"
+          onclick="switchTab('orders')"
+          class="tab-btn active px-5 py-2 rounded-full text-sm font-medium border border-espresso transition-all"
+        >🧾 Orders</button>
+        <button
+          id="tab-blog"
+          onclick="switchTab('blog')"
+          class="tab-btn px-5 py-2 rounded-full text-sm font-medium border border-espresso transition-all hover:bg-espresso hover:text-cream"
+        >📝 Blog</button>
+      </div>
+    </div>
+
+    <main class="flex-1">
+
+      <!-- ═══════════════════════════════════ -->
+      <!--          ORDERS TAB                -->
+      <!-- ═══════════════════════════════════ -->
+      <div id="tab-content-orders" class="max-w-6xl mx-auto px-6 py-10">
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-4 mb-10">
+          <div class="bg-white rounded-2xl p-5 text-center shadow-sm border border-latte/10">
+            <p id="stat-total" class="font-serif text-4xl font-bold text-espresso">0</p>
+            <p class="text-xs text-latte uppercase tracking-widest mt-1">Total Orders</p>
+          </div>
+          <div class="bg-white rounded-2xl p-5 text-center shadow-sm border border-latte/10">
+            <p id="stat-pending" class="font-serif text-4xl font-bold text-roast">0</p>
+            <p class="text-xs text-latte uppercase tracking-widest mt-1">Pending</p>
+          </div>
+          <div class="bg-white rounded-2xl p-5 text-center shadow-sm border border-latte/10">
+            <p id="stat-completed" class="font-serif text-4xl font-bold text-espresso">0</p>
+            <p class="text-xs text-latte uppercase tracking-widest mt-1">Completed</p>
+          </div>
+        </div>
+
+        <!-- Orders Header -->
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <p class="text-latte tracking-widest text-xs uppercase mb-1">Live View</p>
+            <h3 class="font-serif text-3xl font-bold text-espresso">Orders</h3>
+          </div>
+          <div class="flex gap-3">
+            <select
+              id="status-filter"
+              onchange="filterOrders()"
+              class="bg-white border border-latte/40 text-espresso text-sm px-4 py-2 rounded-full focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Orders</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+            </select>
+            <button
+              onclick="loadOrders()"
+              class="flex items-center gap-2 border border-latte/40 text-espresso px-4 py-2 rounded-full text-sm hover:bg-foam transition-colors"
+            >🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div id="orders-loading" class="text-center py-20 text-latte">
+          <div class="inline-block w-8 h-8 border-4 border-latte border-t-espresso rounded-full animate-spin mb-4"></div>
+          <p class="text-sm">Loading orders...</p>
+        </div>
+        <div id="orders-grid"  class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"></div>
+        <div id="orders-empty" class="hidden text-center py-20">
+          <p class="text-5xl mb-4">🧾</p>
+          <p class="text-latte text-lg">No orders yet.</p>
+        </div>
+
+      </div>
+
+      <!-- ═══════════════════════════════════ -->
+      <!--            BLOG TAB                -->
+      <!-- ═══════════════════════════════════ -->
+      <div id="tab-content-blog" class="hidden max-w-6xl mx-auto px-6 py-10">
+
+        <!-- Blog Header -->
+        <div class="flex justify-between items-center mb-8">
+          <div>
+            <p class="text-latte tracking-widest text-xs uppercase mb-1">Manage</p>
+            <h3 class="font-serif text-3xl font-bold text-espresso">Blog Posts</h3>
+          </div>
+          <button
+            onclick="toggleNewPostForm()"
+            class="flex items-center gap-2 bg-espresso text-cream px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-roast transition-colors"
+          >
+            <span class="text-lg leading-none">+</span> New Post
+          </button>
+        </div>
+
+        <!-- New Post Form -->
+        <div id="new-post-form" class="hidden mb-10 bg-white rounded-3xl p-8 shadow-sm border border-latte/10">
+          <h4 class="font-serif text-2xl font-bold text-espresso mb-6">Write a New Post</h4>
+          <div class="space-y-5">
+            <div>
+              <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Title</label>
+              <input
+                id="post-title"
+                type="text"
+                placeholder="e.g. Why We Love Single Origin Beans"
+                class="w-full border border-latte/40 bg-foam rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-latte text-espresso placeholder-latte/50"
+              />
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Content</label>
+              <textarea
+                id="post-content"
+                rows="6"
+                placeholder="Write your post here..."
+                class="w-full border border-latte/40 bg-foam rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-latte text-espresso placeholder-latte/50 resize-none"
+              ></textarea>
+            </div>
+            <div>
+              <label class="text-xs uppercase tracking-widest text-latte font-medium block mb-2">Cover Image (optional)</label>
+              <div
+                id="blog-drop-zone"
+                onclick="document.getElementById('blog-image-input').click()"
+                class="border-2 border-dashed border-latte/40 rounded-xl p-8 text-center cursor-pointer hover:border-latte transition-colors"
+              >
+                <p class="text-4xl mb-2">📷</p>
+                <p class="text-sm text-latte">Click to upload or drag & drop</p>
+                <p class="text-xs text-latte/50 mt-1">JPG, PNG, WEBP up to 5MB</p>
+              </div>
+              <input id="blog-image-input" type="file" accept="image/*" class="hidden" onchange="previewBlogImage(event)"/>
+              <div id="blog-image-preview" class="hidden mt-3 relative">
+                <img id="blog-preview-img" src="" alt="preview" class="w-full h-48 object-cover rounded-xl"/>
+                <button
+                  onclick="clearBlogImage()"
+                  class="absolute top-2 right-2 bg-espresso text-cream rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-roast"
+                >&times;</button>
+              </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+              <button
+                onclick="submitPost()"
+                id="submit-post-btn"
+                class="flex-1 bg-espresso text-cream py-3 rounded-2xl font-semibold text-sm hover:bg-roast transition-colors"
+              >Publish Post ✨</button>
+              <button
+                onclick="toggleNewPostForm()"
+                class="px-6 py-3 border border-latte/40 text-espresso rounded-2xl text-sm font-medium hover:bg-foam transition-colors"
+              >Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blog Loading -->
+        <div id="blog-loading" class="text-center py-20 text-latte">
+          <div class="inline-block w-8 h-8 border-4 border-latte border-t-espresso rounded-full animate-spin mb-4"></div>
+          <p class="text-sm">Loading posts...</p>
+        </div>
+
+        <!-- Blog List -->
+        <div id="blog-list" class="hidden space-y-4"></div>
+
+        <!-- Blog Empty -->
+        <div id="blog-empty" class="hidden text-center py-20">
+          <p class="text-5xl mb-4">📝</p>
+          <p class="text-latte text-lg">No blog posts yet. Write the first one!</p>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════ -->
+    <!--             FOOTER                 -->
+    <!-- ═══════════════════════════════════ -->
+    <footer class="bg-espresso/90 text-foam/50 text-center text-xs py-6 px-4 mt-10">
+      <p>© 2024 The Brew · Staff Portal · <span class="text-latte/60">Internal Use Only</span></p>
+      <p class="mt-2 flex items-center justify-center gap-2 flex-wrap">
+        <span id="region-dot" class="inline-block w-2 h-2 rounded-full bg-latte/40 animate-pulse"></span>
+        <span class="text-latte/70">
+          Routed via Route 53 →
+          <span id="footer-region" class="font-semibold text-latte">detecting...</span>
+          <span id="footer-az"     class="text-foam/40"></span>
+          <span id="footer-ip"     class="text-latte/50 font-mono"></span>
+        </span>
+      </p>
+    </footer>
+
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-espresso text-cream text-sm px-6 py-3 rounded-full shadow-xl z-50"></div>
+
+  <script>
+
+    // ─── Credentials ──────────────────────────────
+    const STAFF_CREDENTIALS = [
+      { username: "admin",    password: "brew2024"  },
+      { username: "cashier1", password: "coffee123" },
+      { username: "cashier2", password: "latte456"  },
+    ];
+
+    // ─── State ────────────────────────────────────
+    let allOrders     = [];
+    let blogImageFile = null;
+    let blogImageKey  = null;
+    let refreshTimer  = null;
+
+    // ─── Region Indicator ─────────────────────────
+    async function loadRegionInfo() {
+      try {
+        const res  = await fetch('/api/region');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+
+        const { region, az, privateIp } = json.data;
+
+        const regionNames = {
+          'us-east-1':      '🇺🇸 N. Virginia',
+          'us-east-2':      '🇺🇸 Ohio',
+          'us-west-1':      '🇺🇸 N. California',
+          'us-west-2':      '🇺🇸 Oregon',
+          'eu-west-1':      '🇮🇪 Ireland',
+          'eu-west-2':      '🇬🇧 London',
+          'eu-west-3':      '🇫🇷 Paris',
+          'eu-central-1':   '🇩🇪 Frankfurt',
+          'eu-north-1':     '🇸🇪 Stockholm',
+          'ap-south-1':     '🇮🇳 Mumbai',
+          'ap-southeast-1': '🇸🇬 Singapore',
+          'ap-southeast-2': '🇦🇺 Sydney',
+          'ap-northeast-1': '🇯🇵 Tokyo',
+          'ap-northeast-2': '🇰🇷 Seoul',
+          'ca-central-1':   '🇨🇦 Canada',
+          'sa-east-1':      '🇧🇷 São Paulo',
+        };
+
+        const friendly = regionNames[region] || region;
+        document.getElementById('footer-region').textContent = `${friendly} (${region})`;
+        document.getElementById('footer-az').textContent     = `· ${az}`;
+        document.getElementById('footer-ip').textContent     = `· ${privateIp}`;
+
+        const dot = document.getElementById('region-dot');
+        dot.classList.remove('bg-latte/40', 'animate-pulse');
+        dot.classList.add('bg-green-400');
+      } catch {
+        document.getElementById('footer-region').textContent = 'unknown';
+      }
+    }
+
+    // ─── Login / Logout ───────────────────────────
+    function doLogin() {
+      const user  = document.getElementById('login-user').value.trim();
+      const pass  = document.getElementById('login-pass').value.trim();
+      const err   = document.getElementById('login-error');
+      const match = STAFF_CREDENTIALS.find(c => c.username === user && c.password === pass);
+      if (match) {
+        err.classList.add('hidden');
+        hideEl('login-screen');
+        showEl('dashboard');
+        document.getElementById('dashboard').classList.add('flex');
+        startClock();
+        loadOrders();
+        loadRegionInfo();
+        refreshTimer = setInterval(loadOrders, 30000);
+      } else {
+        err.classList.remove('hidden');
+      }
+    }
+
+    function doLogout() {
+      clearInterval(refreshTimer);
+      showEl('login-screen');
+      hideEl('dashboard');
+      document.getElementById('dashboard').classList.remove('flex');
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+    }
+
+    // ─── Clock ────────────────────────────────────
+    function startClock() {
+      const clock = document.getElementById('live-clock');
+      clock.classList.remove('hidden');
+      function tick() {
+        clock.textContent = new Date().toLocaleTimeString('en-GB', {
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // ─── Tabs ─────────────────────────────────────
+    function switchTab(tab) {
+      document.getElementById('tab-content-orders').classList.add('hidden');
+      document.getElementById('tab-content-blog').classList.add('hidden');
+      document.getElementById('tab-orders').classList.remove('active');
+      document.getElementById('tab-blog').classList.remove('active');
+      document.getElementById(`tab-content-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (tab === 'blog') loadBlogPosts();
+    }
+
+    // ═══════════════════════════════════════════════
+    //                  ORDERS
+    // ═══════════════════════════════════════════════
+    async function loadOrders() {
+      showEl('orders-loading');
+      hideEl('orders-grid');
+      hideEl('orders-empty');
+      try {
+        const res  = await fetch('/api/orders');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        allOrders = json.data;
+        updateStats();
+        filterOrders();
+        hideEl('orders-loading');
+      } catch {
+        hideEl('orders-loading');
+        showToast('Failed to load orders');
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').textContent     = allOrders.length;
+      document.getElementById('stat-pending').textContent   = allOrders.filter(o => o.status === 'pending').length;
+      document.getElementById('stat-completed').textContent = allOrders.filter(o => o.status === 'completed').length;
+    }
+
+    function filterOrders() {
+      const filter   = document.getElementById('status-filter').value;
+      const filtered = filter === 'all' ? allOrders : allOrders.filter(o => o.status === filter);
+      if (!filtered.length) {
+        hideEl('orders-grid');
+        showEl('orders-empty');
+        return;
+      }
+      renderOrders(filtered);
+      showEl('orders-grid');
+      hideEl('orders-empty');
+    }
+
+    function renderOrders(orders) {
+      const grid = document.getElementById('orders-grid');
+      grid.innerHTML = '';
+      orders.forEach((order, idx) => {
+        const card      = document.createElement('div');
+        const isPending = order.status === 'pending';
+        const time      = new Date(order.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const date      = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+        card.className = `fade-up bg-white rounded-2xl overflow-hidden shadow-sm border-2 transition-all ${isPending ? 'border-roast/40' : 'border-green-200'}`;
+        card.style.animationDelay = `${idx * 40}ms`;
+
+        const itemsList = (order.items || []).map(i =>
+          `<li class="flex justify-between text-xs py-1 border-b border-latte/10 last:border-0">
+            <span class="text-espresso">${i.name || 'Item'}</span>
+            <span class="text-latte">£${parseFloat(i.price_at_time).toFixed(2)}</span>
+          </li>`
+        ).join('');
+
+        card.innerHTML = `
+          <div class="px-5 py-4 flex items-center justify-between ${isPending ? 'bg-foam' : 'bg-green-50'}">
+            <div>
+              <p class="font-serif text-lg font-bold text-espresso">${order.customer_name}</p>
+              <p class="text-xs text-latte">Order #${order.id} · ${date} at ${time}</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${isPending ? 'bg-roast/10 text-roast' : 'bg-green-100 text-green-700'}">
+              ${isPending ? '⏳ Pending' : '✅ Completed'}
+            </span>
+          </div>
+          <div class="px-5 py-3">
+            <p class="text-xs uppercase tracking-widest text-latte mb-2">Items</p>
+            <ul>${itemsList}</ul>
+          </div>
+          <div class="px-5 py-4 flex items-center justify-between border-t border-latte/10">
+            <div>
+              <p class="text-lg font-serif font-bold text-espresso">£${parseFloat(order.total).toFixed(2)}</p>
+              <p class="text-xs text-latte/60 mt-0.5">${order.served_by_az || ''}</p>
+            </div>
+            <button
+              onclick="toggleStatus(${order.id}, '${order.status}')"
+              class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors ${isPending ? 'bg-espresso text-cream hover:bg-roast' : 'bg-green-100 text-green-700 hover:bg-green-200'}"
+            >${isPending ? 'Mark Complete ✅' : 'Mark Pending ⏳'}</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    async function toggleStatus(orderId, currentStatus) {
+      const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+      try {
+        const res  = await fetch(`/api/orders/${orderId}/status`, {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ status: newStatus }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        showToast(newStatus === 'completed' ? 'Order completed ✅' : 'Order reopened ⏳');
+        loadOrders();
+      } catch {
+        showToast('Failed to update order');
+      }
+    }
+
+    // ═══════════════════════════════════════════════
+    //                  BLOG
+    // ═══════════════════════════════════════════════
+    async function loadBlogPosts() {
+      showEl('blog-loading');
+      hideEl('blog-list');
+      hideEl('blog-empty');
+      try {
+        const res  = await fetch('/api/blog');
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        hideEl('blog-loading');
+        if (!json.data.length) { showEl('blog-empty'); return; }
+        renderBlogList(json.data);
+        showEl('blog-list');
+      } catch {
+        hideEl('blog-loading');
+        showToast('Failed to load posts');
+      }
+    }
+
+    function renderBlogList(posts) {
+      const list = document.getElementById('blog-list');
+      list.innerHTML = '';
+      posts.forEach((post, idx) => {
+        const row = document.createElement('div');
+        row.className = `fade-up bg-white rounded-2xl overflow-hidden shadow-sm border border-latte/10 flex items-center gap-4 p-4`;
+        row.style.animationDelay = `${idx * 40}ms`;
+
+        const imgHTML = post.image_url
+          ? `<img src="${post.image_url}" class="w-16 h-16 object-cover rounded-xl flex-shrink-0"/>`
+          : `<div class="w-16 h-16 bg-foam rounded-xl flex items-center justify-center text-2xl flex-shrink-0">📝</div>`;
+
+        const date = new Date(post.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        row.innerHTML = `
+          ${imgHTML}
+          <div class="flex-1 min-w-0">
+            <h4 class="font-serif text-base font-bold text-espresso truncate">${post.title}</h4>
+            <p class="text-xs text-latte mt-0.5">${date}</p>
+          </div>
+          <button
+            onclick="deletePost(${post.id})"
+            class="flex-shrink-0 px-4 py-2 border border-red-200 text-red-400 rounded-xl text-xs hover:bg-red-50 transition-colors"
+          >🗑️ Delete</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function toggleNewPostForm() {
+      const form = document.getElementById('new-post-form');
+      form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function previewBlogImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      blogImageFile = file;
+      const reader  = new FileReader();
+      reader.onload = e => {
+        document.getElementById('blog-preview-img').src = e.target.result;
+        showEl('blog-image-preview');
+        hideEl('blog-drop-zone');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearBlogImage() {
+      blogImageFile = null;
+      blogImageKey  = null;
+      document.getElementById('blog-image-input').value = '';
+      hideEl('blog-image-preview');
+      showEl('blog-drop-zone');
+    }
+
+    async function submitPost() {
+      const title   = document.getElementById('post-title').value.trim();
+      const content = document.getElementById('post-content').value.trim();
+      if (!title)   { showToast('Please add a title'); return; }
+      if (!content) { showToast('Please add some content'); return; }
+
+      const btn = document.getElementById('submit-post-btn');
+      btn.disabled    = true;
+      btn.textContent = 'Publishing...';
+
+      try {
+        if (blogImageFile) {
+          const formData = new FormData();
+          formData.append('image', blogImageFile);
+
+          const uploadRes  = await fetch('/api/upload/blog', {
+            method: 'POST',
+            body:   formData,
+          });
+          const uploadJson = await uploadRes.json();
+          if (!uploadJson.success) throw new Error('Image upload failed');
+          blogImageKey = uploadJson.key;
+        }
+
+        const res  = await fetch('/api/blog', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ title, content, image_key: blogImageKey }),
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error();
+
+        showToast('Post published! ✨');
+        document.getElementById('post-title').value   = '';
+        document.getElementById('post-content').value = '';
+        clearBlogImage();
+        toggleNewPostForm();
+        loadBlogPosts();
+      } catch {
+        showToast('Failed to publish. Try again.');
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Publish Post ✨';
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('Delete this post? This cannot be undone.')) return;
+      try {
+        const res  = await fetch(`/api/blog/${postId}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (!json.success) throw new Error();
+        showToast('Post deleted ✅');
+        loadBlogPosts();
+      } catch {
+        showToast('Failed to delete post.');
+      }
+    }
+
+    // ─── Toast ────────────────────────────────────
+    let toastTimer;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('hidden'), 2500);
+    }
+
+    function showEl(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hideEl(id) { document.getElementById(id).classList.add('hidden'); }
+
+  </script>
+</body>
+</html>
