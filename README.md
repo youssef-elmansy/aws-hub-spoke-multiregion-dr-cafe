@@ -222,7 +222,7 @@ aws-hub-spoke-multiregion-dr-cafe/
 **Mohamed Hany**  
 **Mohamed Maher**  
 **Mai Ahmed**  
-**Nada**  
+**Nada Thabet**  
 **Nouran Farag**  
 
 ---
