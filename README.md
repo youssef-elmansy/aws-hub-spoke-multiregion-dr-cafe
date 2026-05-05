@@ -216,14 +216,14 @@ aws-hub-spoke-multiregion-dr-cafe/
 
 ---
 
-## 👤 Authors 
-**Youssef Elmansy**
-**Mohamed Hany**
-**Youssef Elmansy**
-**Mai Ahmed**
-**Youssef Elmansy**
-**Nouran Farag**
+## 👤 Authors
 
+**Youssef Elmansy**  
+**Mohamed Hany**  
+**Mohamed Maher**  
+**Mai Ahmed**  
+**Nada**  
+**Nouran Farag**  
 
 ---
 
