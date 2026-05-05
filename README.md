@@ -1,7 +1,7 @@
 # ☁️ AWS Hub & Spoke Multi-Region DR Architecture — Cafe App
 
 ## 🗺️ Architecture Diagram
-![Architecture](./architecture/architecture-diagram.png)
+<img width="1600" height="1200" alt="d04c0369-c3ab-49e0-88ba-f7a5bd2098b1" src="https://github.com/user-attachments/assets/72c97e1e-80f6-47bf-a36d-676176c9ec3e" />
 
 ---
 
@@ -207,23 +207,24 @@ aws-hub-spoke-multiregion-dr-cafe/
 │   ├── 03-security/
 │   ├── 04-compute/
 │   ├── 05-load-balancing/
-│   ├── 06-database/
-│   ├── 07-storage/
-│   ├── 08-dns-cdn/
-│   └── 09-monitoring/
+│   ├── 06-storage/
+│   ├── 07-dns-cdn/
+│   └── 08-monitoring/
 ├── 📁 architecture/           → Architecture Diagram
-├── 📁 docs/                   → SOW / Cost Estimate / Notes
 └── 📄 README.md
 ```
 
 ---
 
-## 👤 Author
-**Your Name**
-- 🔗 [LinkedIn](https://linkedin.com/in/yourprofile)
-- 🐙 [GitHub](https://github.com/yourusername)
+## 👤 Authors 
+**Youssef Elmansy**
+**Mohamed Hany**
+**Youssef Elmansy**
+**Mai Ahmed**
+**Youssef Elmansy**
+**Nouran Farag**
+
 
 ---
 
-## 📜 License
-MIT License
+
